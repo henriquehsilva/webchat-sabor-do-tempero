@@ -191,7 +191,7 @@ function App() {
             <ChefHat size={32} className="text-white" />
             <h1 className="text-2xl font-bold text-white">Sabor do Tempero - Marmitaria</h1>
           </div>
-          <p className="text-white/80 text-sm mt-1">Comida Caseira Autêntica Entregue na Sua Porta</p>
+          <p className="text-white/80 text-sm mt-1">Comida Caseira Autêntica Entregue na Sua Porta.</p>
         </header>
 
         {/* Chat Container */}
