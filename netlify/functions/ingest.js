@@ -8,7 +8,7 @@ const path = require('path');
 const openai = require('openai');
 const { createClient } = require('@supabase/supabase-js');
 
-openai.apiKey = process.env.OPENAI_API_KEY;
+openai.apiKey = process.env.VITA_OPENAI_API_KEY;
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
