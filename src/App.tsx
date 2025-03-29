@@ -60,7 +60,7 @@ function App() {
     }));
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/.netlify/functions/responderSeverino', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
