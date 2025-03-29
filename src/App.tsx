@@ -189,7 +189,7 @@ function App() {
         <header className="bg-primary p-4 rounded-b-2xl shadow-lg">
           <div className="flex items-center gap-3">
             <ChefHat size={32} className="text-white" />
-            <h1 className="text-2xl font-bold text-white">Sabor do Tempero - Marmitaria</h1>
+            <h1 className="text-2xl font-bold text-white">Sabor do Tempero</h1>
           </div>
           <p className="text-white/80 text-sm mt-1">Comida caseira autêntica entregue na sua porta.</p>
         </header>
