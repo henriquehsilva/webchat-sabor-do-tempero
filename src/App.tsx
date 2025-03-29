@@ -221,12 +221,20 @@ function App() {
                   {isMenu ? (
                     <div className="w-full">{renderMessage(message)}</div>
                   ) : (
-                    <div className={`message-bubble px-10 py-2 rounded-lg shadow
+                    <div
+                    className={`px-4 py-2 rounded-lg shadow 
+                      whitespace-pre-line break-words 
                       ${message.sender === 'user'
                         ? 'bg-primary text-white text-right'
-                        : 'bg-white text-black text-left'}`}>
-                      {renderMessage(message)}
-                    </div>
+                        : 'bg-white text-black text-left'}`}
+                    style={{
+                      wordBreak: 'normal',
+                      overflowWrap: 'break-word',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    {renderMessage(message)}
+                  </div>
                   )}
                 </div>
               </div>
