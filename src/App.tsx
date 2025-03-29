@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChefHat, Send, Menu } from 'lucide-react';
+import { ChefHat, Send, Utensils } from 'lucide-react';
 import Zoom from 'react-medium-image-zoom';
 import { useKeenSlider } from 'keen-slider/react';
 import severinoAvatar from '/severino.png';
@@ -191,7 +191,7 @@ function App() {
             <ChefHat size={32} className="text-white" />
             <h1 className="text-2xl font-bold text-white">Sabor do Tempero - Marmitaria</h1>
           </div>
-          <p className="text-white/80 text-sm mt-1">Comida Caseira Autêntica Entregue na Sua Porta.</p>
+          <p className="text-white/80 text-sm mt-1">Comida caseira autêntica entregue na sua porta.</p>
         </header>
 
         {/* Chat Container */}
@@ -222,17 +222,17 @@ function App() {
                     <div className="w-full">{renderMessage(message)}</div>
                   ) : (
                     <div
-                    className={`px-4 py-2 rounded-lg shadow 
-                      whitespace-pre-line break-words 
-                      ${message.sender === 'user'
-                        ? 'bg-primary text-white text-right'
-                        : 'bg-white text-black text-left'}`}
-                    style={{
-                      wordBreak: 'normal',
-                      overflowWrap: 'break-word',
-                      maxWidth: '100%',
-                    }}
-                  >
+                      className={`px-4 py-2 rounded-lg shadow 
+                        whitespace-pre-line break-words 
+                        ${message.sender === 'user'
+                          ? 'bg-primary text-white text-right'
+                          : 'bg-white text-black text-left'}`}
+                      style={{
+                        wordBreak: 'normal',
+                        overflowWrap: 'break-word',
+                        maxWidth: '100%',
+                      }}
+                    >
                     {renderMessage(message)}
                   </div>
                   )}
@@ -252,7 +252,7 @@ function App() {
               }}
               className="p-2 rounded-full bg-secondary text-dark hover:bg-highlight transition-colors"
             >
-              <Menu size={24} />
+              <Utensils size={24} />
             </button>
             <input
               type="text"
