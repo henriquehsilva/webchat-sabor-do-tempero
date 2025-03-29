@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #F89D16;
+  --color-secondary: #F5C77E;
+  --color-highlight: #FFD700;
+  --color-dark: #321314;
+  --color-text: #8C552F;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.message-bubble {
+  @apply rounded-2xl p-4 max-w-[80%] break-words;
+}
+
+.user-message {
+  @apply bg-primary text-white ml-auto;
+}
+
+.bot-message {
+  @apply bg-secondary text-dark mr-auto;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
