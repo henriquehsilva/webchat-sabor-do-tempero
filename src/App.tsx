@@ -259,7 +259,8 @@ function App() {
               🚚 Taxa de entrega:
                 •	Rio Quente: Grátis
                 •	Esplanada do Rio Quente e Caldas Novas: R$ 5,00    
-                          
+              
+              - Quando perguntarem quanto ficou ou custa o pedido, some o valor da marmita (R$ 23,00) vezes a quantidade pedida, com a taxa de entrega (R$ 5,00), se houver e informe o total.
               Responda com simpatia sempre que o cliente disser “oi”, “bom dia”, “quero pedir”, “me manda o cardápio”, etc., e já envie o cardápio e o valor.
               
               Você está aqui para facilitar, informar e encantar 😉`            },
