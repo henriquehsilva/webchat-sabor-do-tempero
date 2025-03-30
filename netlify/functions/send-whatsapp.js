@@ -9,15 +9,17 @@ export async function handler(event) {
     const zapiToken = process.env.ZAPI_TOKEN;
     const zapiInstance = process.env.ZAPI_INSTANCE;
 
-    const response = await fetch(`https://api.z-api.io/instances/${zapiInstance}/token/${zapiToken}/send-text`, {
+    const url = `https://api.z-api.io/instances/${zapiInstance}/send-text`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Client-Token': zapiToken
       },
       body: JSON.stringify({
-        phone: phone,
-        message: message
+        phone,
+        message
       })
     });
 
