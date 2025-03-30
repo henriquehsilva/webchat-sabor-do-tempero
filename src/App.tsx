@@ -11,7 +11,7 @@ interface Message {
   id: number;
   text: string;
   sender: 'user' | 'bot';
-  type?: 'text' | 'menu' | 'pix';
+  type?: 'text' | 'menu' | 'pix' | 'enviar';
 }
 
 function App() {
@@ -199,6 +199,20 @@ Sempre incentive o cliente a fazer o pedido.`
           <p className="mt-2 text-center text-sm">Pix Copia e Cola:<br /><span className="break-words text-xs">{pixPayload}</span></p>
         </div>
       );
+    }
+
+    if (message.type === 'enviar') {
+      // Aguarda 3 segundos para simular confirmação do pagamento
+      setTimeout(async () => {
+        await fetch('/.netlify/functions/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: '5562985849729',
+            message: `📦 Pedido confirmado!\nCliente: Fulano\nItens: Marmita x1\nTotal: R$ 23,00\nPagamento via Pix confirmado.`
+          })
+        });
+      }, 3000);
     }
 
     return message.text;
