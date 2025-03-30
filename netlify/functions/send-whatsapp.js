@@ -9,10 +9,11 @@ export async function handler(event) {
     const zapiToken = process.env.ZAPI_TOKEN;
     const zapiInstance = process.env.ZAPI_INSTANCE;
 
-    const response = await fetch(`https://api.z-api.io/instances/${zapiInstance}/token/${zapiToken}/send-text`, {
+    const response = await fetch(`https://api.z-api.io/instances/${zapiInstance}/send-message`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Client-Token': zapiToken
       },
       body: JSON.stringify({
         phone: phone,
@@ -22,13 +23,22 @@ export async function handler(event) {
 
     const data = await response.json();
 
-    if (response.ok && data?.message === 'Message sent successfully') {
-      return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
+    if (response.ok && data.message === 'Message sent successfully') {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true, data })
+      };
     } else {
-      return { statusCode: 500, body: JSON.stringify({ success: false, data }) };
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ success: false, data })
+      };
     }
 
   } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
+    };
   }
 }
