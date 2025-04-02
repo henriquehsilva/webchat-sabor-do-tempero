@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../Users/henriquesilvadev/Projects/sabor-do-tempero/webchat/netlify/functions/pedidos.js"],
+  "sourceRoot": "/var/folders/9b/xd0gz9k53c52f484x_ttgwk40000gn/T/tmp-78561-hbKqfyrayfW8",
+  "sourcesContent": ["const fs = require('fs');\nconst path = require('path');\n\nexports.handler = async (event) => {\n  if (event.httpMethod === 'POST') {\n    const novoPedido = JSON.parse(event.body);\n    novoPedido.id = Date.now().toString();\n\n    const dbPath = path.resolve(__dirname, 'db.json');\n    const pedidos = fs.existsSync(dbPath)\n      ? JSON.parse(fs.readFileSync(dbPath, 'utf8'))\n      : [];\n\n    pedidos.push(novoPedido);\n    fs.writeFileSync(dbPath, JSON.stringify(pedidos, null, 2));\n\n    return {\n      statusCode: 201,\n      body: JSON.stringify(novoPedido)\n    };\n  }\n\n  return {\n    statusCode: 405,\n    body: JSON.stringify({ error: 'M\u00E9todo n\u00E3o permitido' })\n  };\n};"],
+  "mappings": ";AAAA,IAAM,KAAK,QAAQ,IAAI;AACvB,IAAM,OAAO,QAAQ,MAAM;AAE3B,QAAQ,UAAU,OAAO,UAAU;AACjC,MAAI,MAAM,eAAe,QAAQ;AAC/B,UAAM,aAAa,KAAK,MAAM,MAAM,IAAI;AACxC,eAAW,KAAK,KAAK,IAAI,EAAE,SAAS;AAEpC,UAAM,SAAS,KAAK,QAAQ,WAAW,SAAS;AAChD,UAAM,UAAU,GAAG,WAAW,MAAM,IAChC,KAAK,MAAM,GAAG,aAAa,QAAQ,MAAM,CAAC,IAC1C,CAAC;AAEL,YAAQ,KAAK,UAAU;AACvB,OAAG,cAAc,QAAQ,KAAK,UAAU,SAAS,MAAM,CAAC,CAAC;AAEzD,WAAO;AAAA,MACL,YAAY;AAAA,MACZ,MAAM,KAAK,UAAU,UAAU;AAAA,IACjC;AAAA,EACF;AAEA,SAAO;AAAA,IACL,YAAY;AAAA,IACZ,MAAM,KAAK,UAAU,EAAE,OAAO,6BAAuB,CAAC;AAAA,EACxD;AACF;",
+  "names": []
+}

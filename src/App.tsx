@@ -176,19 +176,20 @@ function App() {
               
               QUARTA:
               Opção 1:
-              - Carne cozida com batatas
+              - File de frango a parmegiana
               - Arroz branco
               - Feijão de caldo
-              - Abobrinha verde batida
-              - Chapeleta ao sugo
-              - Salada salpicão
+              - Purê de batata
+              - Macarrão tropical
+              - Salada de legumes
               
               Opção 2:
-              - Filé de frango grelhado ao molho de requeijão
+              - Isca de carne grelhada
               - Arroz branco
               - Feijão de caldo
-              - Abobrinha batida
-              - Chapeleta ao molho sugo
+              - Purê de batata
+              - Macarrão tropical
+              - Salada de legumes
               
               QUINTA:
               Opção 1:

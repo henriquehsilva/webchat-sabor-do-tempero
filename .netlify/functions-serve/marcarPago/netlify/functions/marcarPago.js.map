@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../Users/henriquesilvadev/Projects/sabor-do-tempero/webchat/netlify/functions/marcarPago.js"],
+  "sourceRoot": "/var/folders/9b/xd0gz9k53c52f484x_ttgwk40000gn/T/tmp-78561-4pTYCLkccRiD",
+  "sourcesContent": ["exports.handler = async (event) => {\n    if (event.httpMethod !== 'PATCH') {\n      return { statusCode: 405, body: 'Method Not Allowed' };\n    }\n  \n    const fs = require('fs');\n    const path = require('path');\n    const dbPath = path.resolve(__dirname, 'db.json');\n  \n    const { id } = event.queryStringParameters;\n    const pedidos = JSON.parse(fs.readFileSync(dbPath));\n    const pedido = pedidos.find(p => p.id === id);\n    if (!pedido) return { statusCode: 404, body: 'Pedido n\u00E3o encontrado' };\n  \n    pedido.pago = true;\n    fs.writeFileSync(dbPath, JSON.stringify(pedidos, null, 2));\n  \n    return { statusCode: 200, body: JSON.stringify(pedido) };\n  };"],
+  "mappings": ";AAAA,QAAQ,UAAU,OAAO,UAAU;AAC/B,MAAI,MAAM,eAAe,SAAS;AAChC,WAAO,EAAE,YAAY,KAAK,MAAM,qBAAqB;AAAA,EACvD;AAEA,QAAM,KAAK,QAAQ,IAAI;AACvB,QAAM,OAAO,QAAQ,MAAM;AAC3B,QAAM,SAAS,KAAK,QAAQ,WAAW,SAAS;AAEhD,QAAM,EAAE,GAAG,IAAI,MAAM;AACrB,QAAM,UAAU,KAAK,MAAM,GAAG,aAAa,MAAM,CAAC;AAClD,QAAM,SAAS,QAAQ,KAAK,OAAK,EAAE,OAAO,EAAE;AAC5C,MAAI,CAAC;AAAQ,WAAO,EAAE,YAAY,KAAK,MAAM,2BAAwB;AAErE,SAAO,OAAO;AACd,KAAG,cAAc,QAAQ,KAAK,UAAU,SAAS,MAAM,CAAC,CAAC;AAEzD,SAAO,EAAE,YAAY,KAAK,MAAM,KAAK,UAAU,MAAM,EAAE;AACzD;",
+  "names": []
+}
