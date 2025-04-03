@@ -4,14 +4,42 @@ import Zoom from 'react-medium-image-zoom';
 import { useKeenSlider } from 'keen-slider/react';
 import QRCode from 'react-qr-code';
 import severinoAvatar from '/severino.png';
+import severinoSystemPrompt from '../prompts/severinoPrompt';
 import 'react-medium-image-zoom/dist/styles.css';
 import 'keen-slider/keen-slider.min.css';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+
+const firebaseConfig = {
+	apiKey: "AIzaSyD9_vta323kgL_1zBVwrvVaLdNzPIZjyA4",
+	authDomain: "sabor-do-tempero.firebaseapp.com",
+	projectId: "sabor-do-tempero",
+	storageBucket: "sabor-do-tempero.firebasestorage.app",
+	messagingSenderId: "372714924053",
+	appId: "1:372714924053:web:3c82f804d809a06f2e061c",
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 
 interface Message {
   id: number;
   text: string;
   sender: 'user' | 'bot';
-  type?: 'text' | 'menu' | 'pix';
+  type?: 'text' | 'menu';
+  image?: string;
+}
+
+interface Pedido {
+  nome: string;
+  telefone: string;
+  endereco: string;
+  retirada: boolean;
+  prato: string;
+  quantidade: number;
+  pagamento: string;
+  taxaEntrega: number;
+  total: number;
 }
 
 function App() {
@@ -24,6 +52,11 @@ function App() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [showImage, setShowImage] = useState(false);
+  const [pedido, setPedido] = useState<Partial<Pedido>>({});
+  const [coletandoPedido, setColetandoPedido] = useState(false);
+  const [confirmandoPedido, setConfirmandoPedido] = useState(false);
+
 
   const [sliderRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
@@ -56,51 +89,177 @@ function App() {
 
   const handleSend = async () => {
     if (!inputMessage.trim()) return;
-
     const userMessage: Message = {
       id: messages.length + 1,
       text: inputMessage,
       sender: 'user'
     };
-
+  
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
-
-    // Verifica se é solicitação de pagamento
-    const isPixTest = inputMessage.toLowerCase().includes('teste pix');
-
-    if (isPixTest) {
-      const botMessage: Message = {
-        id: messages.length + 2,
-        text: 'pix-test',
-        sender: 'bot',
-        type: 'pix'
-      };
-      setMessages(prev => [...prev, botMessage]);
-      return;
+  
+    const lower = inputMessage.toLowerCase();
+  
+    if (!coletandoPedido && lower.includes('fazer pedido')) {
+      setColetandoPedido(true);
+      return botReply("Vamos lá! Qual seu nome completo?");
     }
+  
+    if (coletandoPedido && !pedido.nome) {
+      setPedido(prev => ({ ...prev, nome: inputMessage }));
+      return botReply("Qual seu telefone com DDD?");
+    } else if (coletandoPedido && !pedido.telefone) {
+      setPedido(prev => ({ ...prev, telefone: inputMessage }));
+      return botReply("Qual seu endereço completo? (ou diga 'retirada' se for buscar no local)");
+    } else if (coletandoPedido && !pedido.endereco && !pedido.retirada) {
+      if (lower.includes('retirada')) {
+        setPedido(prev => ({ ...prev, retirada: true, endereco: '' }));
+      } else {
+        setPedido(prev => ({ ...prev, endereco: inputMessage, retirada: false }));
+      }
+      return botReply("Qual opção de prato? (Ex: Opção 1 ou 2)");
+    } else if (coletandoPedido && !pedido.prato) {
+      const diaSemanaCompleto = new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        timeZone: 'America/Sao_Paulo'
+      }).toLowerCase();
+  
+      const mapaDias: { [key: string]: string } = {
+        'segunda-feira': 'segunda',
+        'terça-feira': 'terca',
+        'quarta-feira': 'quarta',
+        'quinta-feira': 'quinta',
+        'sexta-feira': 'sexta',
+        'sábado': 'sabado',
+        'domingo': 'domingo'
+      };
+  
+      const diaSemana = mapaDias[diaSemanaCompleto] || 'dia';
+  
+      // Mapear opções para nomes dos pratos
+      const cardapio: { [key: string]: { [key: string]: string } } = {
+        segunda: {
+          '1': 'Vaca atolada',
+          '2': 'Coxas de frango assadas com batatas'
+        },
+        terca: {
+          '1': 'Lombo de porco assado',
+          '2': 'Frango à crioula'
+        },
+        quarta: {
+          '1': 'File de frango a parmegiana',
+          '2': 'Isca de carne grelhada'
+        },
+        quinta: {
+          '1': 'Rabada ao molho de tomate cassê',
+          '2': 'Isca de frango empanada'
+        },
+        sexta: {
+          '1': 'Lagarto recheado',
+          '2': 'Frango ao molho caipira'
+        },
+        sabado: {
+          '1': 'Feijoada completa'
+        }
+      };
+  
+      const opcaoDigitada = inputMessage.trim();
+      const pratoSelecionado = cardapio[diaSemana]?.[opcaoDigitada];
+  
+      if (!pratoSelecionado) {
+        return botReply("Opção inválida. Responda com 1 ou 2, conforme o cardápio do dia.");
+      }
+  
+      setPedido(prev => ({ ...prev, prato: pratoSelecionado }));
+      return botReply("Quantas unidades deseja?");
+    } else if (coletandoPedido && !pedido.quantidade) {
+      const qtd = parseInt(inputMessage);
+      if (!isNaN(qtd)) {
+        setPedido(prev => ({ ...prev, quantidade: qtd }));
+        return botReply("Qual a forma de pagamento? (PIX, Cartão, Dinheiro)");
+      } else {
+        return botReply("Por favor, informe a quantidade como número.");
+      }
+    } else if (coletandoPedido && !pedido.pagamento) {
+      setPedido(prev => ({ ...prev, pagamento: inputMessage }));
+      setConfirmandoPedido(true);
+      return botReply("Posso fechar o pedido com essas informações? (sim/não)");
+    }
+  
+    if (confirmandoPedido && lower.includes('sim')) {
+      let taxaEntrega = 0;
+      if (!pedido.retirada) {
+        taxaEntrega = pedido.endereco?.toLowerCase().includes('esplanada') ? 5 : 0;
+      }
+      
+      const total = 23 * (pedido.quantidade || 1) + taxaEntrega;
+      const dataHora = new Date().toISOString();
 
-    const botReplyText = await sendToGPT(inputMessage, [...messages, userMessage]);
+      const pedidoFinal = {
+        ...pedido,
+        taxaEntrega,
+        total,
+        criadoEm: dataHora,
+        status: 'pedido feito'
+      } as Pedido & { criadoEm: string; status: string };
 
+      await addDoc(collection(db, 'pedidos'), pedidoFinal);
+      setPedido({});
+      setColetandoPedido(false);
+      setConfirmandoPedido(false);
+
+      return botReply(
+        `Pedido confirmado!\n\n📦 Resumo do pedido:\n- Nome: ${pedidoFinal.nome}\n- Telefone: ${pedidoFinal.telefone}\n- ${pedidoFinal.retirada ? 'Retirada no local' : `Entrega: ${pedidoFinal.endereco}`}\n- Prato: ${pedidoFinal.prato}\n- Quantidade: ${pedidoFinal.quantidade}\n- Pagamento: ${pedidoFinal.pagamento}\n- Taxa de entrega: R$ ${pedidoFinal.taxaEntrega.toFixed(2)}\n- Total: R$ ${pedidoFinal.total.toFixed(2)}\n- Data/Hora: ${new Date(pedidoFinal.criadoEm).toLocaleString('pt-BR')}`
+      );
+    } else if (confirmandoPedido && lower.includes('não')) {
+      setPedido({});
+      setColetandoPedido(false);
+      setConfirmandoPedido(false);
+      return botReply("Pedido cancelado. Se quiser recomeçar, é só digitar 'fazer pedido'.");
+    }
+  
+    const diaSemanaCompleto = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      timeZone: 'America/Sao_Paulo'
+    }).toLowerCase();
+  
+    const mapaDias: { [key: string]: string } = {
+      'segunda-feira': 'segunda',
+      'terça-feira': 'terca',
+      'quarta-feira': 'quarta',
+      'quinta-feira': 'quinta',
+      'sexta-feira': 'sexta',
+      'sábado': 'sabado',
+      'domingo': 'domingo'
+    };
+  
+    const diaSemana = mapaDias[diaSemanaCompleto] || 'dia';
+  
+    const botReplyText = await sendToGPT(inputMessage, [...messages, userMessage], diaSemana);
+  
     const botMessage: Message = {
       id: messages.length + 2,
       text: botReplyText,
       sender: 'bot'
     };
-
+  
     setMessages(prev => [...prev, botMessage]);
   };
 
-  const sendToGPT = async (userMessage: string, history: Message[]) => {
+  const botReply = (text: string) => {
+    const botMessage: Message = {
+      id: messages.length + 2,
+      text,
+      sender: 'bot'
+    };
+    setMessages(prev => [...prev, botMessage]);
+  };
+
+  const sendToGPT = async (userMessage: string, history: Message[], diaSemana: string) => {
     const formattedMessages = history.map(m => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
       content: m.text
     }));
-
-  const diaSemana = new Date().toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      timeZone: 'America/Sao_Paulo'
-    });
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -114,156 +273,8 @@ function App() {
           messages: [
             {
               role: 'system',
-              content: `Você é o Severino, assistente virtual do restaurante Sabor do Tempero.
-
-              Fale com simpatia, de forma direta e acolhedora, como um garçom atencioso de restaurante popular. Use um jeito paulistano e prestativo, com expressões como “pode deixar” e “já te ajudo”.
-              
-              ⚠️ Hoje é **${diaSemana.toUpperCase()}**, com base no horário de Brasília (UTC-3). Use este valor como chave para identificar o cardápio do dia. Nunca tente deduzir o dia por conta própria.
-              
-              📋 Sempre que for solicitado o cardápio do dia, apresente **exatamente** as opções listadas para o dia atual. Para sábado, mostre o cardápio único. Aos domingos, informe que não há atendimento.
-              
-              ---
-              
-              📦 Informações do serviço:
-              
-              - Valor da marmita: **R$ 23,00**
-              - Entregas em **Rio Quente - GO** são gratuitas.
-              - Fora de Rio Quente, a taxa de entrega é **R$ 5,00** (avise com gentileza).
-              - Pedidos devem ser feitos pelo WhatsApp: **(64) 99213-8817**
-              - Aceitamos: dinheiro, **PIX**, cartões de crédito e débito.
-              - Retirada no local: Alameda da Garças, Qd. 17, Lt. 13, Fauna I - Rio Quente/GO
-              - Horário de atendimento: **11h às 15h**
-              - A comida é feita com carinho pela Dona Fátima ❤️
-              
-              ---
-              
-              👨‍🍳 Cardápio semanal:
-              
-              SEGUNDA:
-              Opção 1:
-              - Vaca atolada
-              - Arroz branco
-              - Feijão de caldo
-              - Purê de abóbora cabotiá
-              - Panqueca de carne moída
-              - Salada brasileira
-              
-              Opção 2:
-              - Coxas de frango assadas com batata
-              - Arroz branco
-              - Feijão de caldo
-              - Purê de abóbora cabotiá
-              - Panqueca de carne moída
-              - Salada brasileira
-              
-              TERÇA:
-              Opção 1:
-              - Lombo de porco assado
-              - Arroz branco
-              - Feijão tropeiro
-              - Mandioca frita
-              - Banana frita
-              - Espaguete alho e óleo
-              - Salada alemã
-              
-              Opção 2:
-              - Frango à crioula
-              - Arroz branco
-              - Feijão tropeiro
-              - Mandioca frita
-              - Banana frita
-              - Espaguete alho e óleo
-              
-              QUARTA:
-              Opção 1:
-              - File de frango a parmegiana
-              - Arroz branco
-              - Feijão de caldo
-              - Purê de batata
-              - Macarrão tropical
-              - Salada de legumes
-              
-              Opção 2:
-              - Isca de carne grelhada
-              - Arroz branco
-              - Feijão de caldo
-              - Purê de batata
-              - Macarrão tropical
-              - Salada de legumes
-              
-              QUINTA:
-              Opção 1:
-              - Rabada ao molho de tomate cassê
-              - Arroz branco
-              - Feijão de caldo
-              - Quibebe de mandioca
-              - Macarrão parafuso ao molho sugo
-              - Salada mista
-              
-              Opção 2:
-              - Isca de frango empanada
-              - Arroz branco
-              - Feijão de caldo
-              - Quibebe de mandioca
-              - Macarrão parafuso ao molho sugo
-              - Salada mista
-              
-              SEXTA:
-              Opção 1:
-              - Lagarto recheado
-              - Batata rústica
-              - Lasanha à bolonhesa
-              - Arroz branco
-              - Feijão de caldo
-              - Salada colorida
-              
-              Opção 2:
-              - Frango ao molho caipira
-              - Arroz branco
-              - Feijão de caldo
-              - Batata rústica
-              - Lasanha à bolonhesa
-              - Salada colorida
-              
-              SÁBADO:
-              Cardápio único:
-              - Feijoada completa
-              - Arroz branco
-              - Torresmo
-              - Banana frita
-              - Linguiça assada
-              - Farofa de cebola
-              - Couve ao alho e óleo
-              
-              DOMINGO:
-              - Não atendemos aos domingos.
-              
-              ---
-              
-              🎯 Comportamento esperado:
-              
-              - Sempre cumprimente com simpatia: “Olá! Eu sou o Severino, seu assistente virtual do restaurante Sabor do Tempero. Estou aqui pra te ajudar com o prato do dia!”
-              - Trate o usuário com respeito e paciência, mesmo que ele esteja impaciente ou confuso.
-              - Seja claro e objetivo, evite jargões ou respostas genéricas.
-              - Nunca invente informações. Sempre use apenas o que está neste prompt.
-              - Incentive o cliente a fazer o pedido, mesmo que ele ainda esteja decidindo.
-              - Se perguntarem quem te criou, responda que foi o desenvolvedor **Henrique Silva Dev**: https://site.henriquesilvadev.com.br
-              - O site do restaurante é: https://sabordotempero.com.br
-              
-              ---
-
-              Entregamos somente nas seguintes localidades:
-                •	Rio Quente
-                •	Esplanada do Rio Quente
-
-              🚚 Taxa de entrega:
-                •	Rio Quente: Grátis
-                •	Esplanada do Rio Quente: R$ 5,00    
-              
-              - Quando perguntarem quanto ficou ou custa o pedido, some o valor da marmita (R$ 23,00) vezes a quantidade pedida, com a taxa de entrega (R$ 5,00), se houver e informe o total.
-              Responda com simpatia sempre que o cliente disser “oi”, “bom dia”, “quero pedir”, “me manda o cardápio”, etc., e já envie o cardápio e o valor.
-              
-              Você está aqui para facilitar, informar e encantar 😉`            },
+              content: severinoSystemPrompt.replace('{{DIA_DA_SEMANA}}', diaSemana.toUpperCase())
+            },
             ...formattedMessages,
             {
               role: 'user',
@@ -283,47 +294,26 @@ function App() {
   };
 
   const renderMessage = (message: Message) => {
-    if (message.type === 'menu') {
-      const menuItems = JSON.parse(message.text);
-      return (
-        <div className="message-bubble bg-white text-black rounded-lg shadow p-2 max-w-full">
-          <div ref={sliderRef} className="keen-slider">
-            {menuItems.map((item: any, index: number) => (
-              <div
-                key={index}
-                className="keen-slider__slide bg-white rounded-lg overflow-hidden shadow-md"
-              >
-                <Zoom>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-48 object-cover cursor-zoom-in rounded-t-lg"
-                  />
-                </Zoom>
-                <div className="p-4">
-                  <h3 className="font-bold text-text">{item.name}</h3>
-                  <p className="text-primary font-medium">{item.price}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (message.type === 'pix') {
-      const pixPayload = `00020126360014BR.GOV.BCB.PIX01119040684219152040000530398654040.015802BR5925Sabor do Tempero Teste6009Rio Quente62200515***6304`;
-      return (
-        <div className="bg-white text-black rounded-lg shadow p-4">
-          <p className="mb-2 font-bold text-red-600">⚠️ Este é um teste! Não pague este Pix, ou será cobrado R$ 0,01.</p>
-          <QRCode value={pixPayload} size={256} />
-          <p className="mt-2 text-center text-sm">Pix Copia e Cola:<br /><span className="break-words text-xs">{pixPayload}</span></p>
-        </div>
-      );
-    }
-
     return message.text;
   };
+
+  const diaSemanaCompleto = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    timeZone: 'America/Sao_Paulo'
+  }).toLowerCase();
+
+  const mapaDias: { [key: string]: string } = {
+    'segunda-feira': 'segunda',
+    'terça-feira': 'terca',
+    'quarta-feira': 'quarta',
+    'quinta-feira': 'quinta',
+    'sexta-feira': 'sexta',
+    'sábado': 'sabado',
+    'domingo': 'domingo'
+  };
+
+  const diaSemana = mapaDias[diaSemanaCompleto] || 'dia';
+  const imageUrl = `https://sabordotempero.com.br/cardapio/${diaSemana}.jpeg`;
 
   return (
     <div className="min-h-screen bg-dark">
@@ -338,14 +328,12 @@ function App() {
 
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 chat-container">
           {messages.map(message => {
-            const isMenu = message.type === 'menu';
-
             return (
               <div
                 key={message.id}
                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} w-full`}
               >
-                {message.sender === 'bot' && !isMenu && (
+                {message.sender === 'bot' && (
                   <img
                     src={severinoAvatar}
                     alt="Severino"
@@ -354,21 +342,30 @@ function App() {
                   />
                 )}
 
-                <div className={`${isMenu ? 'w-full' : 'max-w-xs'}`}>
-                  {isMenu ? (
-                    <div className="w-full">{renderMessage(message)}</div>
-                  ) : (
-                    <div
-                      className={`px-4 py-2 rounded-lg shadow whitespace-pre-line break-words ${message.sender === 'user' ? 'bg-primary text-white text-right' : 'bg-white text-black text-left'}`}
-                      style={{ wordBreak: 'normal', overflowWrap: 'break-word', maxWidth: '100%' }}
-                    >
-                      {renderMessage(message)}
-                    </div>
-                  )}
+                <div className={`max-w-xs`}>
+                  <div
+                    className={`px-4 py-2 rounded-lg shadow whitespace-pre-line break-words ${message.sender === 'user' ? 'bg-primary text-white text-right' : 'bg-white text-black text-left'}`
+                    }
+                    style={{ wordBreak: 'normal', overflowWrap: 'break-word', maxWidth: '100%' }}
+                  >
+                    {renderMessage(message)}
+                  </div>
                 </div>
               </div>
             );
           })}
+
+          {showImage && (
+            <div className="flex justify-start">
+              <Zoom>
+                <img
+                  src={imageUrl}
+                  alt="Imagem do cardápio do dia"
+                  className="w-full rounded-lg shadow cursor-zoom-in max-w-xs"
+                />
+              </Zoom>
+            </div>
+          )}
         </div>
 
         <div className="p-4 bg-white/5 backdrop-blur-sm">
