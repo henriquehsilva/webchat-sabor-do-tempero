@@ -81,17 +81,17 @@ const severinoSystemPrompt = `
               - Rabada ao molho de tomate cassê
               - Arroz branco
               - Feijão de caldo
-              - Quibebe de mandioca
-              - Macarrão parafuso ao molho sugo
-              - Salada mista
+              - Polenta frita
+              - Abobrinha verde batida
+              - Salada de macarrão
               
               Opção 2:
-              - Isca de frango empanada
+              - Frango Assado na Maionese
               - Arroz branco
               - Feijão de caldo
-              - Quibebe de mandioca
-              - Macarrão parafuso ao molho sugo
-              - Salada mista
+              - Polenta frita
+              - Abobrinha verde batida
+              - Salada de macarrão
               
               SEXTA:
               Opção 1:
