@@ -152,7 +152,7 @@ function App() {
         },
         quinta: {
           '1': 'Rabada ao molho de tomate cassê',
-          '2': 'Isca de frango empanada'
+          '2': 'Frango assado na maionese'
         },
         sexta: {
           '1': 'Lagarto recheado',
@@ -191,7 +191,7 @@ function App() {
       if (!pedido.retirada) {
         taxaEntrega = pedido.endereco?.toLowerCase().includes('esplanada') ? 5 : 0;
       }
-      
+
       const total = 23 * (pedido.quantidade || 1) + taxaEntrega;
       const dataHora = new Date().toISOString();
 
